@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+binary_name="${BINARY_NAME:-ddcli}"
+output="${OUTPUT:-dist/$binary_name}"
+
+echo "==> testing"
+go test ./...
+
+echo "==> building $output"
+mkdir -p "$(dirname "$output")"
+go build -trimpath -o "$output" .
+
+echo "==> smoke testing"
+"$output" --help >/dev/null
+"$output" logs search --help >/dev/null
+"$output" synthetics list --help >/dev/null
+"$output" metrics query --help >/dev/null
+"$output" hosts list --help >/dev/null
+"$output" dashboards list --help >/dev/null
+"$output" apm spans --help >/dev/null
+"$output" errors search --help >/dev/null
+"$output" cost analyze --help >/dev/null
+"$output" scopes --help >/dev/null
+
+echo "built $output"
