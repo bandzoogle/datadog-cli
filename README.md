@@ -100,6 +100,19 @@ The Cloud Cost Management inventory commands expose setup and governance context
 
 This CLI is meant to complement MCP rather than replace it everywhere. MCP is useful for integrated auth and rich tool discovery, but it also adds server and tool context to conversations. A CLI gives agents a smaller contract: `--help`, explicit commands, JSON stdout, stderr diagnostics, and replayable invocations outside Cursor.
 
+## Binary releases
+
+Pushes to `main` that pass CI and change Go sources or `go.mod` / `go.sum` trigger a patch semver GitHub release (for example `v0.1.1`). Builds are published for Linux and macOS on `amd64` and `arm64`.
+
+Stable download URLs (always point at the **latest** release’s asset names):
+
+- Linux x86_64: `https://github.com/bandzoogle/datadog-cli/releases/latest/download/ddcli_linux_amd64.tar.gz`
+- Linux arm64: `https://github.com/bandzoogle/datadog-cli/releases/latest/download/ddcli_linux_arm64.tar.gz`
+- macOS x86_64: `https://github.com/bandzoogle/datadog-cli/releases/latest/download/ddcli_darwin_amd64.tar.gz`
+- macOS arm64: `https://github.com/bandzoogle/datadog-cli/releases/latest/download/ddcli_darwin_arm64.tar.gz`
+
+Each archive contains a single `ddcli` binary. Run `ddcli --version` to see the release tag baked into the binary. Versioned archives (`ddcli_<tag>_linux_amd64.tar.gz`, etc.) are attached for pinning.
+
 ## Development
 
 ```sh
