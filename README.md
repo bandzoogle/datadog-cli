@@ -58,6 +58,9 @@ ddcli hosts totals
 ddcli dashboards list --query app --limit 100
 ddcli dashboards get abc-def-ghi
 ddcli apm spans --query 'service:api @http.status_code:500' --from now-15m --to now --limit 25
+ddcli appsec blocked-rules summary --from now-7d --limit 200 --pretty
+ddcli appsec custom-rules list
+ddcli appsec exclusion-filters list
 ddcli errors search --query 'service:api' --track trace --from now-1h --to now
 ddcli errors get ISSUE_ID
 ddcli cost analyze --group-by service --from now-30d --to now-2d --limit 25

@@ -141,6 +141,30 @@ func requiredScopes() []scopeInfo {
 			OAuthScope: "apm_read",
 		},
 		{
+			Command:    "appsec blocked-rules summary",
+			API:        "Spans API",
+			Permission: "apm_read",
+			OAuthScope: "apm_read",
+			Notes: []string{
+				"Aggregates in-app WAF rule hits from @appsec.blocked spans.",
+			},
+		},
+		{
+			Command:    "appsec custom-rules list|get",
+			API:        "Application Security WAF custom rules API",
+			Permission: "appsec_protect_read",
+			OAuthScope: "appsec_protect_read",
+		},
+		{
+			Command:    "appsec exclusion-filters list|get",
+			API:        "Application Security WAF exclusion filters API",
+			Permission: "appsec_protect_read",
+			OAuthScope: "appsec_protect_read",
+			Notes: []string{
+				"Exclusion filters correspond to passlist entries in the Datadog UI.",
+			},
+		},
+		{
 			Command:    "errors search|get",
 			API:        "Error Tracking API",
 			Permission: "error_tracking_read",
