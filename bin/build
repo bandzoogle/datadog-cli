@@ -22,6 +22,8 @@ echo "==> smoke testing"
 "$output" hosts list --help >/dev/null
 "$output" dashboards list --help >/dev/null
 "$output" apm spans --help >/dev/null
+"$output" appsec blocked-rules summary --help >/dev/null
+"$output" appsec custom-rules list --help >/dev/null
 "$output" errors search --help >/dev/null
 "$output" cost analyze --help >/dev/null
 "$output" scopes --help >/dev/null
