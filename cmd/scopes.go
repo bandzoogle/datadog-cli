@@ -171,6 +171,12 @@ func requiredScopes() []scopeInfo {
 			OAuthScope: "error_tracking_read",
 		},
 		{
+			Command:    "security signals search|get",
+			API:        "Cloud SIEM Security Signals API",
+			Permission: "security_monitoring_signals_read",
+			OAuthScope: "security_monitoring_signals_read",
+		},
+		{
 			Command:    "cost analyze",
 			API:        "Metrics API with cloud_cost data source",
 			Permission: "cloud_cost_management_read",

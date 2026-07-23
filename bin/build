@@ -25,6 +25,7 @@ echo "==> smoke testing"
 "$output" appsec blocked-rules summary --help >/dev/null
 "$output" appsec custom-rules list --help >/dev/null
 "$output" errors search --help >/dev/null
+"$output" security signals search --help >/dev/null
 "$output" cost analyze --help >/dev/null
 "$output" scopes --help >/dev/null
 

@@ -63,6 +63,8 @@ ddcli appsec custom-rules list
 ddcli appsec exclusion-filters list
 ddcli errors search --query 'service:api' --track trace --from now-1h --to now
 ddcli errors get ISSUE_ID
+ddcli security signals search --query 'team:bandzoogle' --from now-1h --to now
+ddcli security signals get SIGNAL_ID
 ddcli cost analyze --group-by service --from now-30d --to now-2d --limit 25
 ddcli cost analyze --metric aws.cost.amortized --filter 'env:prod' --group-by region
 ddcli cost accounts list --provider all
