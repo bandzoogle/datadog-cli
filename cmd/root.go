@@ -27,8 +27,9 @@ var globals globalOptions
 var rootCmd = &cobra.Command{
 	Use:     "ddcli",
 	Version: Version,
-	Short:   "Read-only Datadog CLI for scripts and LLM agents",
-	Long: `ddcli wraps read-only Datadog APIs with stable JSON output.
+	Short:   "Datadog CLI for scripts and LLM agents",
+	Long: `ddcli wraps Datadog APIs with stable JSON output and narrow,
+explicit write commands.
 
 Credentials can be supplied with DD_API_KEY and DD_APP_KEY, or with
 DD_ACCESS_TOKEN for OAuth-style bearer access tokens.`,
