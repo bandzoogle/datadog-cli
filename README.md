@@ -1,6 +1,8 @@
 # Datadog CLI
 
-`ddcli` is a read-only Datadog CLI designed for scripts and LLM agents. It keeps the interface narrow and discoverable while returning stable JSON on stdout.
+`ddcli` is a Datadog CLI designed for scripts and LLM agents. It keeps the
+interface narrow and discoverable while returning stable JSON on stdout.
+Most commands are read-only; write commands are explicit and idempotent.
 
 ## Auth
 
@@ -22,7 +24,7 @@ For temporary OAuth-style credentials, `DD_ACCESS_TOKEN` or `--access-token` is 
 
 ## Output
 
-Every read command writes JSON to stdout. Diagnostics and errors go to stderr.
+Every command writes JSON to stdout. Diagnostics and errors go to stderr.
 
 Default output is wrapped:
 
@@ -57,6 +59,8 @@ ddcli hosts list --filter 'env:prod' --limit 25
 ddcli hosts totals
 ddcli dashboards list --query app --limit 100
 ddcli dashboards get abc-def-ghi
+ddcli dashboards apply dashboard.json --dry-run
+ddcli dashboards apply dashboard.json
 ddcli apm spans --query 'service:api @http.status_code:500' --from now-15m --to now --limit 25
 ddcli appsec blocked-rules summary --from now-7d --limit 200 --pretty
 ddcli appsec custom-rules list
@@ -76,6 +80,23 @@ ddcli scopes --command cost
 ```
 
 Time flags accept `now`, relative values like `now-15m`, RFC3339 timestamps, Unix seconds, or Unix milliseconds. Logs and spans pass time strings through to Datadog; metrics and Error Tracking convert them to the epoch formats required by their APIs.
+
+## Dashboard apply
+
+`dashboards apply` validates a canonical Datadog dashboard JSON file and creates
+or updates it. If the definition contains an `id`, that dashboard is updated.
+Otherwise, the command matches by exact title: no match creates a dashboard,
+one match updates it, and multiple matches fail without writing.
+
+Use `--dry-run` to validate the JSON locally without credentials or a write:
+
+```sh
+ddcli dashboards apply dashboards/review-edge-overview.json --dry-run --pretty
+ddcli dashboards apply dashboards/review-edge-overview.json --pretty
+```
+
+The application key or access token needs `dashboards_write`; title-based
+matching also needs `dashboards_read`.
 
 ## Required Permissions
 
@@ -124,4 +145,6 @@ Each archive contains a single `ddcli` binary. Run `ddcli --version` to see the 
 bin/build
 ```
 
-`bin/build` runs unit tests, builds `dist/ddcli`, and smoke-tests the help output for the main read-only command groups. Live Datadog smoke tests require credentials and are intentionally manual for now.
+`bin/build` runs unit tests, builds `dist/ddcli`, and smoke-tests the help output
+for the main command groups. Live Datadog smoke tests require credentials and
+are intentionally manual for now.

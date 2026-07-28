@@ -135,6 +135,15 @@ func requiredScopes() []scopeInfo {
 			OAuthScope: "dashboards_read",
 		},
 		{
+			Command:    "dashboards apply",
+			API:        "Dashboards API",
+			Permission: "dashboards_write",
+			OAuthScope: "dashboards_write",
+			Notes: []string{
+				"Apply also needs dashboards_read to match an existing dashboard by title.",
+			},
+		},
+		{
 			Command:    "apm spans",
 			API:        "Spans API",
 			Permission: "apm_read",
