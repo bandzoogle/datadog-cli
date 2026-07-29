@@ -69,6 +69,10 @@ ddcli dashboards list --query app --limit 100
 ddcli dashboards get abc-def-ghi
 ddcli dashboards apply dashboard.json --dry-run
 ddcli dashboards apply dashboard.json
+ddcli monitors list --name 'Kamal edge'
+ddcli monitors get 12345678
+ddcli monitors validate monitor.json
+ddcli monitors apply monitor.json --dry-run --require-non-notifying
 ddcli apm spans --query 'service:api @http.status_code:500' --from now-15m --to now --limit 25
 ddcli appsec blocked-rules summary --from now-7d --limit 200 --pretty
 ddcli appsec custom-rules list
@@ -156,6 +160,23 @@ ddcli dashboards apply dashboards/review-edge-overview.json --pretty
 
 The application key or access token needs `dashboards_write`; title-based
 matching also needs `dashboards_read`.
+
+## Monitor apply
+
+`monitors apply` validates canonical monitor JSON and creates or updates it. If
+the definition contains an `id`, that monitor is updated. Otherwise, the
+command matches by exact name: no match creates a monitor, one match updates
+it, and multiple matches fail without writing.
+
+Use `--dry-run` before writes and `monitors validate` to ask Datadog to validate
+the query and options without creating the monitor. For unattended
+preparation, pass `--require-non-notifying`; the command then accepts only
+draft monitors or monitors globally silenced indefinitely with no notification
+mentions in their message. Draft monitors require Datadog's draft-monitor
+preview to be enabled for the organization.
+
+The application key or access token needs `monitors_write` for validation and
+apply; name-based matching and inventory also need `monitors_read`.
 
 ## Required Permissions
 
