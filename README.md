@@ -50,6 +50,12 @@ Use `--pretty` for indented JSON and `--raw` to print the Datadog response witho
 
 ```sh
 ddcli logs search --query 'service:web error' --from now-15m --to now --limit 50
+ddcli logs indexes order
+ddcli logs indexes list --query production
+ddcli logs indexes get bandzoogle-production
+ddcli logs pipelines order
+ddcli logs pipelines list --query openresty
+ddcli logs pipelines get PIPELINE_ID
 ddcli synthetics list --query checkout --limit 25
 ddcli synthetics get abc-def-ghi
 ddcli metrics list --query system.cpu
@@ -80,6 +86,26 @@ ddcli scopes --command cost
 ```
 
 Time flags accept `now`, relative values like `now-15m`, RFC3339 timestamps, Unix seconds, or Unix milliseconds. Logs and spans pass time strings through to Datadog; metrics and Error Tracking convert them to the epoch formats required by their APIs.
+
+## Log configuration audit
+
+The `logs indexes` and `logs pipelines` commands are read-only. Index responses
+include routing filters, daily quotas, Standard/Flex retention, and ordered
+exclusion filters with sample rates. Pipeline responses preserve the API's
+processor order and include filters, parser rules, remappers, and nested
+processors.
+
+Use the explicit order commands when routing order matters:
+
+```sh
+ddcli logs indexes order --pretty
+ddcli logs indexes get bandzoogle-production --pretty
+ddcli logs pipelines order --pretty
+ddcli logs pipelines list --query openresty --pretty
+```
+
+These commands require `logs_read_config`. Datadog also requires an
+administrator-owned application key for pipeline configuration reads.
 
 ## Dashboard apply
 

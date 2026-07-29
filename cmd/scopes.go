@@ -111,6 +111,15 @@ func requiredScopes() []scopeInfo {
 			},
 		},
 		{
+			Command:    "logs indexes|pipelines list|get|order",
+			API:        "Logs Configuration API",
+			Permission: "logs_read_config",
+			OAuthScope: "logs_read_config",
+			Notes: []string{
+				"Pipeline configuration endpoints require an administrator-owned application key.",
+			},
+		},
+		{
 			Command:    "synthetics list|get",
 			API:        "Synthetics API",
 			Permission: "synthetics_read",
