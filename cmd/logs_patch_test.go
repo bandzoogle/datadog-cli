@@ -148,6 +148,17 @@ func TestLoadLogExclusionPatchIsStrict(t *testing.T) {
 	}
 }
 
+func TestLogExclusionPatchHelpNamesRBACPermissions(t *testing.T) {
+	help := logsIndexesPatchExclusionsCmd.Long
+	if !strings.Contains(help, "logs_read_config") ||
+		!strings.Contains(help, "logs_modify_indexes") {
+		t.Fatalf("expected exact Logs RBAC permissions in help, got:\n%s", help)
+	}
+	if strings.Contains(help, "logs_write_config") {
+		t.Fatalf("help includes nonexistent permission:\n%s", help)
+	}
+}
+
 func patchFor(name, expected, replacement string) logExclusionPatch {
 	return logExclusionPatch{
 		IndexName: "production",

@@ -134,7 +134,11 @@ Patch files are non-secret JSON:
 
 Always run `--dry-run` first. It performs the read and all precondition checks,
 then prints the exact before/after queries and preserved invariants without an
-update. Applying requires `logs_read_config` and `logs_write_config`.
+update. The guarded read requires the `logs_read_config` RBAC permission.
+Applying through the V1 `UpdateLogsIndex` endpoint requires
+`logs_modify_indexes`, shown as **Logs Modify Indexes** in the Datadog UI.
+These are role or scoped application-key permissions; Datadog does not offer
+them as OAuth client scopes.
 
 ## Dashboard apply
 
@@ -155,7 +159,10 @@ matching also needs `dashboards_read`.
 
 ## Required Permissions
 
-Use `ddcli scopes` to print the Datadog permissions and OAuth scopes needed by each command group. This command does not require Datadog credentials.
+Use `ddcli scopes` to print the Datadog RBAC permissions and, where available,
+separate OAuth scopes needed by each command group. Commands marked with no
+OAuth scope require application-key authentication. This command does not
+require Datadog credentials.
 
 Datadog API keys identify the organization. Access is controlled by the application key owner's role permissions, scoped application key permissions, or OAuth access token scopes.
 

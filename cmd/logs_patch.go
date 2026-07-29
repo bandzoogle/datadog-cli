@@ -37,7 +37,12 @@ var logsIndexesPatchExclusionsCmd = &cobra.Command{
 query, then replace only those query strings in one index update request.
 
 The command rejects missing, duplicate, stale, empty, and no-op replacements.
-All unrelated index properties and exclusion fields are preserved.`,
+All unrelated index properties and exclusion fields are preserved.
+
+The guarded read requires the Logs Configuration Read RBAC permission
+(logs_read_config). The V1 index update requires Logs Modify Indexes
+(logs_modify_indexes). Datadog does not offer these Logs RBAC permissions as
+OAuth client scopes.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runLogsIndexesPatchExclusions,
 }
