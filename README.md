@@ -53,6 +53,8 @@ ddcli logs search --query 'service:web error' --from now-15m --to now --limit 50
 ddcli logs indexes order
 ddcli logs indexes list --query production
 ddcli logs indexes get bandzoogle-production
+ddcli logs indexes patch-exclusions patch.json --dry-run
+ddcli logs indexes patch-exclusions patch.json
 ddcli logs pipelines order
 ddcli logs pipelines list --query openresty
 ddcli logs pipelines get PIPELINE_ID
@@ -106,6 +108,33 @@ ddcli logs pipelines list --query openresty --pretty
 
 These commands require `logs_read_config`. Datadog also requires an
 administrator-owned application key for pipeline configuration reads.
+
+### Preconditioned exclusion patch
+
+`logs indexes patch-exclusions` is the only log-configuration write command. It
+fetches the named index, requires every named exclusion to occur exactly once
+with the exact expected query, replaces only those query strings, and sends one
+index update request containing all current updateable properties. Missing,
+duplicate, stale, unknown, empty, and no-op patch entries fail without writing.
+
+Patch files are non-secret JSON:
+
+```json
+{
+  "index_name": "example-index",
+  "replacements": [
+    {
+      "name": "Example exclusion",
+      "expected_query": "service:example status:info",
+      "replacement_query": "service:example status:(info OR ok)"
+    }
+  ]
+}
+```
+
+Always run `--dry-run` first. It performs the read and all precondition checks,
+then prints the exact before/after queries and preserved invariants without an
+update. Applying requires `logs_read_config` and `logs_write_config`.
 
 ## Dashboard apply
 

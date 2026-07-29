@@ -12,7 +12,7 @@ import (
 
 var logsCmd = &cobra.Command{
 	Use:   "logs",
-	Short: "Search logs and read log configuration",
+	Short: "Search logs and manage log configuration",
 }
 
 var logsSearchCmd = &cobra.Command{

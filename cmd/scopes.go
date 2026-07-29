@@ -120,6 +120,15 @@ func requiredScopes() []scopeInfo {
 			},
 		},
 		{
+			Command:    "logs indexes patch-exclusions",
+			API:        "Logs Indexes API",
+			Permission: "logs_write_config",
+			OAuthScope: "logs_write_config",
+			Notes: []string{
+				"Also requires logs_read_config to validate exact current queries before one index update.",
+			},
+		},
+		{
 			Command:    "synthetics list|get",
 			API:        "Synthetics API",
 			Permission: "synthetics_read",
