@@ -13,7 +13,7 @@ type scopeInfo struct {
 	Command    string   `json:"command"`
 	API        string   `json:"api"`
 	Permission string   `json:"permission"`
-	OAuthScope string   `json:"oauth_scope"`
+	OAuthScope string   `json:"oauth_scope,omitempty"`
 	Notes      []string `json:"notes,omitempty"`
 }
 
@@ -21,6 +21,7 @@ type scopesResponse struct {
 	Summary         []string    `json:"summary"`
 	Required        []scopeInfo `json:"required"`
 	Unique          []string    `json:"unique"`
+	OAuthScopes     []string    `json:"oauth_scopes"`
 	RecommendedRole []string    `json:"recommended_role"`
 }
 
@@ -47,12 +48,14 @@ func runScopes(cmd *cobra.Command, args []string) error {
 	resp := scopesResponse{
 		Summary: []string{
 			"DD_API_KEY identifies the Datadog organization.",
-			"DD_APP_KEY or DD_APPLICATION_KEY must belong to a user/service account with the listed permissions.",
-			"DD_ACCESS_TOKEN must include the listed OAuth scopes when using bearer-token auth.",
+			"DD_APP_KEY or DD_APPLICATION_KEY must belong to a user/service account with the listed RBAC permissions.",
+			"Scoped application keys can be assigned any listed RBAC permission.",
+			"DD_ACCESS_TOKEN must include each listed OAuth scope; commands without an OAuth scope require application-key authentication.",
 			"Use the smallest subset that matches the commands you plan to run.",
 		},
-		Required: required,
-		Unique:   uniquePermissions(required),
+		Required:    required,
+		Unique:      uniquePermissions(required),
+		OAuthScopes: uniqueOAuthScopes(required),
 		RecommendedRole: []string{
 			"Create a service account for ddcli.",
 			"Grant only the read permissions for the command groups you need.",
@@ -82,14 +85,26 @@ func renderScopesText(resp scopesResponse, filter string) string {
 		b.WriteString("Datadog permissions for ddcli:\n\n")
 	}
 
+	b.WriteString("RBAC / scoped application-key permissions:\n")
 	b.WriteString(strings.Join(resp.Unique, "\n"))
+	b.WriteString("\n\nOAuth scopes:\n")
+	if len(resp.OAuthScopes) == 0 {
+		b.WriteString("(none)")
+	} else {
+		b.WriteString(strings.Join(resp.OAuthScopes, "\n"))
+	}
 	b.WriteString("\n\n")
-	b.WriteString("Grant these to the DD_APP_KEY owner, scoped application key, or OAuth token.\n")
+	b.WriteString("Grant RBAC permissions to the DD_APP_KEY owner or scoped application key.\n")
+	b.WriteString("OAuth tokens can run only commands with a listed OAuth scope.\n")
 	b.WriteString("DD_API_KEY only identifies the Datadog organization.\n\n")
 
 	b.WriteString("Command coverage:\n")
 	for _, item := range resp.Required {
-		fmt.Fprintf(&b, "- %s: %s\n", item.Command, item.Permission)
+		oauthScope := item.OAuthScope
+		if oauthScope == "" {
+			oauthScope = "unavailable"
+		}
+		fmt.Fprintf(&b, "- %s: RBAC %s; OAuth %s\n", item.Command, item.Permission, oauthScope)
 	}
 
 	b.WriteString("\nSetup notes:\n")
@@ -105,9 +120,36 @@ func requiredScopes() []scopeInfo {
 			Command:    "logs search",
 			API:        "Logs Search API",
 			Permission: "logs_read_data",
-			OAuthScope: "logs_read_data",
 			Notes: []string{
 				"Actual log visibility may also be narrowed by log indexes and restriction queries.",
+				"Datadog does not offer this Logs RBAC permission as an OAuth client scope.",
+			},
+		},
+		{
+			Command:    "logs indexes|pipelines list|get|order",
+			API:        "Logs Configuration API",
+			Permission: "logs_read_config",
+			Notes: []string{
+				"Pipeline configuration endpoints require an administrator-owned application key.",
+				"Datadog does not offer this Logs RBAC permission as an OAuth client scope.",
+			},
+		},
+		{
+			Command:    "logs indexes patch-exclusions (guarded read)",
+			API:        "Logs Indexes API",
+			Permission: "logs_read_config",
+			Notes: []string{
+				"Datadog UI name: Logs Configuration Read.",
+				"Datadog does not offer this Logs RBAC permission as an OAuth client scope.",
+			},
+		},
+		{
+			Command:    "logs indexes patch-exclusions (index update)",
+			API:        "Logs Indexes API",
+			Permission: "logs_modify_indexes",
+			Notes: []string{
+				"Datadog UI name: Logs Modify Indexes.",
+				"Datadog does not offer this Logs RBAC permission as an OAuth client scope.",
 			},
 		},
 		{
@@ -227,6 +269,21 @@ func uniquePermissions(scopes []scopeInfo) []string {
 	out := make([]string, 0, len(seen))
 	for permission := range seen {
 		out = append(out, permission)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func uniqueOAuthScopes(scopes []scopeInfo) []string {
+	seen := map[string]bool{}
+	for _, scope := range scopes {
+		if scope.OAuthScope != "" {
+			seen[scope.OAuthScope] = true
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for scope := range seen {
+		out = append(out, scope)
 	}
 	sort.Strings(out)
 	return out

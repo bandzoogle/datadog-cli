@@ -50,6 +50,14 @@ Use `--pretty` for indented JSON and `--raw` to print the Datadog response witho
 
 ```sh
 ddcli logs search --query 'service:web error' --from now-15m --to now --limit 50
+ddcli logs indexes order
+ddcli logs indexes list --query production
+ddcli logs indexes get bandzoogle-production
+ddcli logs indexes patch-exclusions patch.json --dry-run
+ddcli logs indexes patch-exclusions patch.json
+ddcli logs pipelines order
+ddcli logs pipelines list --query openresty
+ddcli logs pipelines get PIPELINE_ID
 ddcli synthetics list --query checkout --limit 25
 ddcli synthetics get abc-def-ghi
 ddcli metrics list --query system.cpu
@@ -81,6 +89,57 @@ ddcli scopes --command cost
 
 Time flags accept `now`, relative values like `now-15m`, RFC3339 timestamps, Unix seconds, or Unix milliseconds. Logs and spans pass time strings through to Datadog; metrics and Error Tracking convert them to the epoch formats required by their APIs.
 
+## Log configuration audit
+
+The `logs indexes` and `logs pipelines` commands are read-only. Index responses
+include routing filters, daily quotas, Standard/Flex retention, and ordered
+exclusion filters with sample rates. Pipeline responses preserve the API's
+processor order and include filters, parser rules, remappers, and nested
+processors.
+
+Use the explicit order commands when routing order matters:
+
+```sh
+ddcli logs indexes order --pretty
+ddcli logs indexes get bandzoogle-production --pretty
+ddcli logs pipelines order --pretty
+ddcli logs pipelines list --query openresty --pretty
+```
+
+These commands require `logs_read_config`. Datadog also requires an
+administrator-owned application key for pipeline configuration reads.
+
+### Preconditioned exclusion patch
+
+`logs indexes patch-exclusions` is the only log-configuration write command. It
+fetches the named index, requires every named exclusion to occur exactly once
+with the exact expected query, replaces only those query strings, and sends one
+index update request containing all current updateable properties. Missing,
+duplicate, stale, unknown, empty, and no-op patch entries fail without writing.
+
+Patch files are non-secret JSON:
+
+```json
+{
+  "index_name": "example-index",
+  "replacements": [
+    {
+      "name": "Example exclusion",
+      "expected_query": "service:example status:info",
+      "replacement_query": "service:example status:(info OR ok)"
+    }
+  ]
+}
+```
+
+Always run `--dry-run` first. It performs the read and all precondition checks,
+then prints the exact before/after queries and preserved invariants without an
+update. The guarded read requires the `logs_read_config` RBAC permission.
+Applying through the V1 `UpdateLogsIndex` endpoint requires
+`logs_modify_indexes`, shown as **Logs Modify Indexes** in the Datadog UI.
+These are role or scoped application-key permissions; Datadog does not offer
+them as OAuth client scopes.
+
 ## Dashboard apply
 
 `dashboards apply` validates a canonical Datadog dashboard JSON file and creates
@@ -100,7 +159,10 @@ matching also needs `dashboards_read`.
 
 ## Required Permissions
 
-Use `ddcli scopes` to print the Datadog permissions and OAuth scopes needed by each command group. This command does not require Datadog credentials.
+Use `ddcli scopes` to print the Datadog RBAC permissions and, where available,
+separate OAuth scopes needed by each command group. Commands marked with no
+OAuth scope require application-key authentication. This command does not
+require Datadog credentials.
 
 Datadog API keys identify the organization. Access is controlled by the application key owner's role permissions, scoped application key permissions, or OAuth access token scopes.
 
