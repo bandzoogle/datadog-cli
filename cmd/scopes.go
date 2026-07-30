@@ -186,6 +186,28 @@ func requiredScopes() []scopeInfo {
 			},
 		},
 		{
+			Command:    "monitors list|get",
+			API:        "Monitors API",
+			Permission: "monitors_read",
+			OAuthScope: "monitors_read",
+		},
+		{
+			Command:    "monitors validate",
+			API:        "Monitors API",
+			Permission: "monitors_write",
+			OAuthScope: "monitors_write",
+		},
+		{
+			Command:    "monitors apply",
+			API:        "Monitors API",
+			Permission: "monitors_write",
+			OAuthScope: "monitors_write",
+			Notes: []string{
+				"Apply also needs monitors_read to match an existing monitor by exact name.",
+				"Use --require-non-notifying for draft or globally silenced changes.",
+			},
+		},
+		{
 			Command:    "apm spans",
 			API:        "Spans API",
 			Permission: "apm_read",
