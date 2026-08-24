@@ -78,6 +78,19 @@ func TestMonitorApplyScopesIncludeReadAndWrite(t *testing.T) {
 	}
 }
 
+func TestSyntheticsApplyScopesIncludeReadAndWrite(t *testing.T) {
+	got := filterScopes(requiredScopes(), "synthetics")
+	permissions := uniquePermissions(got)
+	want := []string{"synthetics_read", "synthetics_write"}
+	if !reflect.DeepEqual(permissions, want) {
+		t.Fatalf("expected permissions %#v, got %#v", want, permissions)
+	}
+	scopes := uniqueOAuthScopes(got)
+	if !reflect.DeepEqual(scopes, want) {
+		t.Fatalf("expected OAuth scopes %#v, got %#v", want, scopes)
+	}
+}
+
 func TestRenderScopesTextShowsUniquePermissionsTogether(t *testing.T) {
 	resp := scopesResponse{
 		Required: []scopeInfo{

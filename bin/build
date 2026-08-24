@@ -18,6 +18,8 @@ echo "==> smoke testing"
 "$output" --help >/dev/null
 "$output" logs search --help >/dev/null
 "$output" synthetics list --help >/dev/null
+"$output" synthetics validate --help >/dev/null
+"$output" synthetics apply --help >/dev/null
 "$output" metrics query --help >/dev/null
 "$output" hosts list --help >/dev/null
 "$output" dashboards list --help >/dev/null
