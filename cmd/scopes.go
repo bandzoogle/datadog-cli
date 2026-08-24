@@ -159,6 +159,17 @@ func requiredScopes() []scopeInfo {
 			OAuthScope: "synthetics_read",
 		},
 		{
+			Command:    "synthetics apply",
+			API:        "Synthetics API",
+			Permission: "synthetics_write",
+			OAuthScope: "synthetics_write",
+			Notes: []string{
+				"Apply also needs synthetics_read to match an existing test by exact name.",
+				"Use --dry-run to resolve the match read-only without writing.",
+				"synthetics validate runs locally and needs no Datadog permissions.",
+			},
+		},
+		{
 			Command:    "metrics list|metadata|query",
 			API:        "Metrics API",
 			Permission: "metrics_read",

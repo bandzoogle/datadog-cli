@@ -60,6 +60,9 @@ ddcli logs pipelines list --query openresty
 ddcli logs pipelines get PIPELINE_ID
 ddcli synthetics list --query checkout --limit 25
 ddcli synthetics get abc-def-ghi
+ddcli synthetics validate test.json
+ddcli synthetics apply test.json --dry-run
+ddcli synthetics apply test.json
 ddcli metrics list --query system.cpu
 ddcli metrics metadata system.cpu.user
 ddcli metrics query --query 'avg:system.cpu.user{*}' --from now-1h --to now
@@ -188,6 +191,94 @@ require Datadog credentials.
 Datadog API keys identify the organization. Access is controlled by the application key owner's role permissions, scoped application key permissions, or OAuth access token scopes.
 
 Unlike most commands, `ddcli scopes` prints a compact human-readable permissions list by default because it is primarily a setup reference. Use `--raw` if you need the underlying JSON data object.
+
+## Synthetic Tests as Code
+
+`ddcli synthetics apply` manages a Synthetic API test from a canonical JSON
+definition, the same way `dashboards apply` and `monitors apply` do, so a test
+can live in version control next to the monitors it backs up.
+
+```sh
+ddcli synthetics validate systems/production/datadog/synthetics/asset-delivery.json
+ddcli synthetics apply systems/production/datadog/synthetics/asset-delivery.json --dry-run
+ddcli synthetics apply systems/production/datadog/synthetics/asset-delivery.json
+```
+
+Matching works like the other apply commands:
+
+- A `public_id` in the JSON names the test to update.
+- Otherwise apply matches an existing test by exact `name`.
+- Two tests with the same name is a refusal, not a guess, so an ambiguous match
+  can never overwrite the wrong test. A name belonging to a browser or mobile
+  test is refused for the same reason.
+- `--dry-run` resolves the match read-only and prints what would be written.
+
+`public_id` and `monitor_id` are assigned by Datadog. Apply strips both from the
+request body and takes the public ID from the match instead, so a file produced
+by `ddcli synthetics get` can be edited and applied back.
+
+Both single-request API tests (`"subtype": "http"`) and multistep API tests
+(`"subtype": "multi"`) are supported. Browser and mobile tests are not: they use
+different endpoints and schemas.
+
+Validation is strict about unrecognized keys, at any depth. The Datadog client
+keeps unknown JSON keys instead of rejecting them, so `{"tick_evry": 300}` would
+otherwise round-trip to Datadog and be ignored, leaving a test that does not do
+what the file says. Apply and validate both report the dotted path instead:
+
+```
+Synthetic test JSON contains unsupported fields: config.steps[0].extracedValues, options.tick_evry
+```
+
+`synthetics validate` runs entirely locally and needs no credentials — Datadog
+publishes no Synthetics validate endpoint, unlike monitors. Use
+`apply --dry-run` when you also want to see which test would be written.
+
+A multistep test that checks end-to-end asset delivery — fetch a page, extract a
+digest-stamped asset URL from the body, then assert the asset itself is served —
+looks like this:
+
+```json
+{
+  "name": "Production asset delivery end-to-end",
+  "type": "api",
+  "subtype": "multi",
+  "message": "Asset delivery failed while pages still returned 200.",
+  "tags": ["env:production", "service:openresty"],
+  "locations": ["aws:us-east-1", "aws:eu-west-1"],
+  "config": {
+    "steps": [
+      {
+        "name": "Fetch a member page",
+        "subtype": "http",
+        "request": { "method": "GET", "url": "https://www.example.com/", "timeout": 30 },
+        "assertions": [{ "type": "statusCode", "operator": "is", "target": 200 }],
+        "extractedValues": [
+          {
+            "name": "ASSET_URL",
+            "type": "http_body",
+            "parser": { "type": "regex", "value": "https://[^\"]+/assets/application-[0-9a-f]+\\.css" }
+          }
+        ]
+      },
+      {
+        "name": "Fetch the digest asset",
+        "subtype": "http",
+        "request": { "method": "GET", "url": "{{ ASSET_URL }}", "timeout": 30 },
+        "assertions": [
+          { "type": "statusCode", "operator": "is", "target": 200 },
+          { "type": "header", "property": "content-type", "operator": "contains", "target": "text/css" }
+        ]
+      }
+    ]
+  },
+  "options": { "tick_every": 300, "min_location_failed": 1, "retry": { "count": 1, "interval": 300 } },
+  "status": "live"
+}
+```
+
+Apply needs `synthetics_write` in addition to `synthetics_read`; see
+`ddcli scopes --command synthetics`.
 
 ## Cost Analysis
 
