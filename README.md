@@ -58,6 +58,8 @@ ddcli logs indexes patch-exclusions patch.json
 ddcli logs pipelines order
 ddcli logs pipelines list --query openresty
 ddcli logs pipelines get PIPELINE_ID
+ddcli logs pipelines apply pipeline.json --dry-run
+ddcli logs pipelines apply pipeline.json
 ddcli synthetics list --query checkout --limit 25
 ddcli synthetics get abc-def-ghi
 ddcli synthetics validate test.json
@@ -98,11 +100,13 @@ Time flags accept `now`, relative values like `now-15m`, RFC3339 timestamps, Uni
 
 ## Log configuration audit
 
-The `logs indexes` and `logs pipelines` commands are read-only. Index responses
-include routing filters, daily quotas, Standard/Flex retention, and ordered
-exclusion filters with sample rates. Pipeline responses preserve the API's
-processor order and include filters, parser rules, remappers, and nested
-processors.
+`logs indexes list|get|order` and `logs pipelines list|get|order` are
+read-only. Index responses include routing filters, daily quotas,
+Standard/Flex retention, and ordered exclusion filters with sample rates.
+Pipeline responses preserve the API's processor order and include filters,
+parser rules, remappers, and nested processors. Write access exists for both
+— `logs indexes patch-exclusions` and `logs pipelines apply` — and is covered
+in its own section below.
 
 Use the explicit order commands when routing order matters:
 
@@ -116,10 +120,75 @@ ddcli logs pipelines list --query openresty --pretty
 These commands require `logs_read_config`. Datadog also requires an
 administrator-owned application key for pipeline configuration reads.
 
+### Log pipeline apply
+
+`logs pipelines apply` validates canonical pipeline JSON and creates or
+updates a custom pipeline, the same way `dashboards apply` and `monitors
+apply` do. If the definition contains an `id`, that pipeline is updated.
+Otherwise, the command matches by exact `name`: no match creates a pipeline,
+one match updates it, and multiple matches fail without writing.
+
+Apply refuses to write to a pipeline that is read-only on either side of the
+match: a submitted definition with `"is_read_only": true`, or a live pipeline
+Datadog already marks read-only, such as its bundled `Varnish` or `Rails`
+integration pipelines. Those pipelines can never be created or edited through
+this API, so if you need to change what they emit, add your own pipeline
+after them instead — see `insert_after_pipeline_id` below.
+
+```sh
+ddcli logs pipelines apply pipeline.json --dry-run
+ddcli logs pipelines apply pipeline.json
+```
+
+An optional top-level `insert_after_pipeline_id` places the pipeline
+immediately after a named pipeline in the evaluation order, and is stripped
+before the body is sent to Datadog. This is how you make a pipeline run after
+a read-only integration pipeline to re-map something it produced — for
+example, re-deriving a saner log-level `status` after Datadog's own `Varnish`
+pipeline maps every HTTP 4xx to `warning`:
+
+```json
+{
+  "name": "Varnish severity override",
+  "filter": { "query": "source:varnish" },
+  "insert_after_pipeline_id": "4DOu6dYaR46nARsjyjShbg",
+  "processors": [
+    {
+      "type": "category-processor",
+      "target": "http.varnish_severity",
+      "categories": [
+        { "filter": { "query": "@http.status_code:[500 TO 599]" }, "name": "error" },
+        { "filter": { "query": "@http.status_code:[200 TO 499]" }, "name": "info" }
+      ]
+    },
+    {
+      "type": "status-remapper",
+      "sources": ["http.varnish_severity"]
+    }
+  ]
+}
+```
+
+Order placement is idempotent: `apply` fetches the live pipeline order first
+and only issues an order update when the pipeline is not already positioned
+immediately after `insert_after_pipeline_id`; a rerun with no drift reports
+`order_changed: false` and makes no order write. `--dry-run` performs the same
+lookups and reports the intended action and order diff without writing
+anything, and needs no write permission — only `logs_read_config`.
+
+The application key or access token needs `logs_write_pipelines` (Datadog UI:
+Logs Write Pipelines) for the write itself; name-based matching and the
+read-only check also need `logs_read_config`. Pipeline configuration
+endpoints require an administrator-owned application key. The exact
+`logs_write_pipelines` permission name has not been confirmed against a live
+403 from this tool — if apply is rejected on authorization, the error detail
+will name whatever permission Datadog actually requires.
+
 ### Preconditioned exclusion patch
 
-`logs indexes patch-exclusions` is the only log-configuration write command. It
-fetches the named index, requires every named exclusion to occur exactly once
+`logs indexes patch-exclusions` is one of two log-configuration write
+commands (the other is `logs pipelines apply` above). It fetches the named
+index, requires every named exclusion to occur exactly once
 with the exact expected query, replaces only those query strings, and sends one
 index update request containing all current updateable properties. Missing,
 duplicate, stale, unknown, empty, and no-op patch entries fail without writing.
