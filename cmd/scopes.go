@@ -135,6 +135,17 @@ func requiredScopes() []scopeInfo {
 			},
 		},
 		{
+			Command:    "logs pipelines apply",
+			API:        "Logs Pipelines API",
+			Permission: "logs_write_pipelines",
+			Notes: []string{
+				"Datadog UI name: Logs Write Pipelines. Admin-owned application key required, same as pipeline reads.",
+				"Not yet confirmed against a live 403 from this tool; a rejected apply will name the actual required permission.",
+				"Name-based matching and the read-only refusal check also need logs_read_config.",
+				"Datadog does not offer this Logs RBAC permission as an OAuth client scope.",
+			},
+		},
+		{
 			Command:    "logs indexes patch-exclusions (guarded read)",
 			API:        "Logs Indexes API",
 			Permission: "logs_read_config",

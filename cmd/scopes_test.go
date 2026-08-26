@@ -52,6 +52,19 @@ func TestLogIndexPatchUsesRBACPermissionWithoutOAuthScope(t *testing.T) {
 	}
 }
 
+func TestLogPipelinesApplyUsesRBACPermissionWithoutOAuthScope(t *testing.T) {
+	got := filterScopes(requiredScopes(), "logs pipelines apply")
+	if len(got) != 1 {
+		t.Fatalf("expected one pipeline apply permission row, got %d", len(got))
+	}
+	if got[0].Permission != "logs_write_pipelines" {
+		t.Fatalf("expected logs_write_pipelines, got %s", got[0].Permission)
+	}
+	if got[0].OAuthScope != "" {
+		t.Fatalf("expected no OAuth scope, got %s", got[0].OAuthScope)
+	}
+}
+
 func TestUniqueOAuthScopesOmitsUnavailableScopes(t *testing.T) {
 	got := uniqueOAuthScopes([]scopeInfo{
 		{Permission: "logs_modify_indexes"},

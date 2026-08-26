@@ -17,6 +17,7 @@ go build -trimpath -o "$output" .
 echo "==> smoke testing"
 "$output" --help >/dev/null
 "$output" logs search --help >/dev/null
+"$output" logs pipelines apply --help >/dev/null
 "$output" synthetics list --help >/dev/null
 "$output" synthetics validate --help >/dev/null
 "$output" synthetics apply --help >/dev/null
