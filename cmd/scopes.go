@@ -230,6 +230,12 @@ func requiredScopes() []scopeInfo {
 			},
 		},
 		{
+			Command:    "notification-rules list|get",
+			API:        "Monitors API",
+			Permission: "monitors_read",
+			OAuthScope: "monitors_read",
+		},
+		{
 			Command:    "apm spans",
 			API:        "Spans API",
 			Permission: "apm_read",
