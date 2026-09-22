@@ -78,6 +78,8 @@ ddcli monitors list --name 'Kamal edge'
 ddcli monitors get 12345678
 ddcli monitors validate monitor.json
 ddcli monitors apply monitor.json --dry-run --require-non-notifying
+ddcli notification-rules list --filters 'name:pagerduty'
+ddcli notification-rules get RULE_ID --include created_by
 ddcli apm spans --query 'service:api @http.status_code:500' --from now-15m --to now --limit 25
 ddcli appsec blocked-rules summary --from now-7d --limit 200 --pretty
 ddcli appsec custom-rules list
